@@ -3,7 +3,7 @@ use rusqlite::Connection;
 use tauri::State;
 use serde::{Serialize, Deserialize};
 use axum::{
-    routing::{get, post},
+    routing::get,
     Router,
     Json,
     extract::State as AxumState,
