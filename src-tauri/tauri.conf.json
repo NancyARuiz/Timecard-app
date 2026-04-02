@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-tanstack-start-react-template",
+  "productName": "timeline-app",
   "version": "0.1.0",
   "identifier": "com.tauri.deva",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-tanstack-start-react-template",
+        "title": "Timeline Kiosk",
         "width": 800,
         "height": 600
       }
