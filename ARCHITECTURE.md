@@ -74,3 +74,102 @@ Because we have **two** things running simultaneously (The React UI polling data
 In `src-tauri/src/lib.rs`, the SQLite connection object is wrapped in an `Arc<Mutex<Connection>>`.
 1. **`Mutex` (Mutual Exclusion):** This serves as a lock on a door. Whether Tauri tries to fetch events, or Axum tries to write an event, they must "lock" the Mutex. The other system physically has to wait in line until the transaction is safe and 100% complete.
 2. **`Arc` (Atomic Reference Count):** This allows us to give one master key to the Tauri Display state, and one master key to the Axum Server thread, allowing them to both own the Mutex securely.
+
+---
+
+## 5. Deployment: GitHub Actions CI/CD
+
+### The Problem This Solves
+
+The Raspberry Pi uses a fundamentally different CPU architecture than a Mac (`ARM64 Linux` vs `x86_64 macOS`). You cannot compile the Tauri app on your Mac and drag it onto the Pi — the binaries are completely incompatible. 
+
+The old approach would be to install Rust, Node.js, and all build tools directly on the Pi and compile everything there. While that works, it takes 20-30 minutes of compilation time on the Pi's slower hardware, and needs to be repeated every time you update the app.
+
+Instead, we use **GitHub Actions** to cross-compile the app for the Pi in the cloud — the Pi only ever needs to download and install a ready-made `.deb` file.
+
+---
+
+### How It Works: `.github/workflows/build-pi.yml`
+
+This YAML file is a set of instructions that GitHub's cloud computers follow automatically whenever you trigger a new release. Here is what each step does:
+
+1. **Checkout code** — Downloads the latest version of your repository onto the cloud server.
+2. **Install Linux system dependencies** — Installs the native Linux libraries (like `libwebkit2gtk`) that Tauri needs to render its window on Linux. It also installs `gcc-aarch64-linux-gnu`, a special compiler that can produce ARM64 code while running on an x86 server.
+3. **Install Rust** — Installs the Rust compiler and adds the `aarch64-unknown-linux-gnu` compilation target, which tells Rust to produce ARM64 Linux binaries.
+4. **Cache dependencies** — Saves previously compiled Rust and npm packages to make future builds significantly faster (typically cuts build time from 15 minutes down to 3-5 minutes after the first run).
+5. **Install Node.js + pnpm** — Installs the JavaScript tools needed to compile the React frontend.
+6. **Install JS dependencies** — Runs `pnpm install` to fetch all frontend packages.
+7. **Build with `tauri-action`** — Tauri's official GitHub Action compiles both the React frontend (via Vite) and the Rust backend (cross-compiled for ARM64). It then bundles them into a `.deb` installer file and attaches it to a new GitHub Release automatically.
+
+> [!NOTE]
+> The `CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER` environment variable is the critical piece that makes cross-compilation work. It tells the Rust linker to use the ARM64 cross-compiler (`aarch64-linux-gnu-gcc`) instead of the default x86 linker. Without this, the build would produce a binary that runs on the cloud server but crashes on the Pi.
+
+---
+
+### Triggering a New Release
+
+The workflow fires on **two conditions**:
+
+1. **A version tag push** — The primary trigger. When you push a tag starting with `v` (like `v1.0`, `v1.1`, `v2.0`), the workflow starts automatically.
+2. **Manual dispatch** — You can also click "Run workflow" from the **Actions** tab in your GitHub repository at any time without making a new commit.
+
+**Workflow for releasing a new version of the app from your Mac:**
+
+```bash
+# 1. Commit all your changes
+git add .
+git commit -m "Add new memories feature"
+
+# 2. Create a version tag
+git tag v1.0
+
+# 3. Push both the code and the tag
+git push && git push --tags
+```
+
+After ~10-15 minutes, a new entry will appear on your GitHub repository's **"Releases"** page (the bookmark icon on the right sidebar) with the `.deb` file attached.
+
+---
+
+### Installing on the Raspberry Pi
+
+Once a release exists on GitHub, the Pi only needs two commands — **ever**. No Rust, no Node.js, no building anything locally.
+
+```bash
+# 1. Download the installer from your GitHub Releases page
+#    (replace the URL with the actual link from the Releases page)
+wget https://github.com/YOUR_USERNAME/TestingTauri/releases/download/v1.0/timeline-app_0.1.0_arm64.deb
+
+# 2. Install it like any standard Linux application
+sudo dpkg -i timeline-app_0.1.0_arm64.deb
+```
+
+To **launch** the kiosk display:
+```bash
+timeline-app
+```
+
+To **update** to a newer version in the future, simply `wget` the new `.deb` file and run `dpkg -i` again — it automatically overwrites the old installation. The `timeline.db` database file (stored safely in `~/.local/share/timeline-app/`) is never touched during an update, so all your memories are preserved.
+
+---
+
+### Summary: Full Development Cycle
+
+```
+Edit code on Mac
+      │
+      ▼
+git push && git push --tags
+      │
+      ▼
+GitHub Actions cloud server builds ARM64 .deb (~10-15 min)
+      │
+      ▼
+.deb file appears on GitHub Releases page
+      │
+      ▼
+Pi: wget + dpkg -i   (30 seconds)
+      │
+      ▼
+timeline-app is live on the Pi display 🎉
+```

@@ -42,3 +42,11 @@ pnpm tauri build
 
 ./src-tauri/target/release/tauri-tanstack-start-react-template
 
+
+
+--
+# For downloadable file
+
+wget https://github.com/hamiltonnBC/timeline-app_0.1.0_arm64.deb
+sudo dpkg -i timeline-app_0.1.0_arm64.deb
+timeline-app
