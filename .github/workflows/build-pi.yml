@@ -22,13 +22,22 @@ jobs:
           # Tell APT that this machine will also handle arm64 packages
           sudo dpkg --add-architecture arm64
 
-          # Pin the existing x86 sources to amd64 only so they don't conflict
-          sudo sed -i 's/^deb http/deb [arch=amd64] http/g' /etc/apt/sources.list
+          # Completely rewrite sources.list to explicitly pin existing entries to
+          # amd64 only — this prevents security.ubuntu.com (which has no arm64
+          # packages) from being queried for arm64 after we add the architecture.
+          sudo tee /etc/apt/sources.list > /dev/null << 'EOF'
+          deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+          deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
+          deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse
+          deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+          EOF
 
-          # Add ARM64-specific apt package sources (Ubuntu Ports mirror)
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy           main restricted universe multiverse" | sudo tee /etc/apt/sources.list.d/arm64.list
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates   main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64.list
-          echo "deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security  main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list.d/arm64.list
+          # Add ARM64-specific sources (Ubuntu Ports hosts all ARM64 packages)
+          sudo tee /etc/apt/sources.list.d/arm64.list > /dev/null << 'EOF'
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted universe multiverse
+          deb [arch=arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted universe multiverse
+          EOF
 
           sudo apt-get update
 
