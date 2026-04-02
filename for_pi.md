@@ -50,3 +50,6 @@ pnpm tauri build
 wget https://github.com/hamiltonnBC/timeline-app_0.1.0_arm64.deb
 sudo dpkg -i timeline-app_0.1.0_arm64.deb
 timeline-app
+
+
+wget https://github.com/hamiltonnBC/TestingTauri/releases/download/v1.0/timeline-app_0.1.0_arm64.deb
