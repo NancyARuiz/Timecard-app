@@ -1,4 +1,5 @@
 # Timeline Kiosk Application
+Team Members: Eber and Nancy
 
 ## This readme is for the initial template. You can learn more about this application at either [ARCHITECTURE.md](ARCHITECTURE.md) or [codebase_explainer.md](codebase_explainer.md).
 
