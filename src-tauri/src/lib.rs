@@ -1,4 +1,4 @@
-use axum::{extract::State as AxumState, response::Html, routing::get, Json, Router};
+use axum::{extract::{State as AxumState, DefaultBodyLimit}, response::Html, routing::get, Json, Router};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
@@ -148,6 +148,7 @@ pub fn run() {
         let axum_app = Router::new()
           .route("/", get(serve_uploader))
           .route("/api/events", get(api_get_events).post(api_add_event))
+          .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
           .with_state(axum_db)
           .layer(CorsLayer::permissive());
 

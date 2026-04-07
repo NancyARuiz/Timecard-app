@@ -25,8 +25,8 @@
             </div>
             
             <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Image URL</label>
-                <input type="url" id="image_url" required class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="https://example.com/image.jpg">
+                <label class="text-sm font-semibold text-slate-700">Image</label>
+                <input type="file" id="image_file" accept="image/*" required class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100">
             </div>
             
             <div class="flex flex-col gap-1">
@@ -53,32 +53,47 @@
             btn.innerText = 'Sending...';
             btn.disabled = true;
 
-            const payload = {
-                event_date: document.getElementById('event_date').value,
-                title: document.getElementById('title').value,
-                image_url: document.getElementById('image_url').value,
-                description: document.getElementById('description').value,
-            };
+            const fileInput = document.getElementById('image_file');
+            const file = fileInput.files[0];
+            
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64String = reader.result;
+                const payload = {
+                    event_date: document.getElementById('event_date').value,
+                    title: document.getElementById('title').value,
+                    image_url: base64String,
+                    description: document.getElementById('description').value,
+                };
 
-            try {
-                const response = await fetch('/api/events', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                try {
+                    const response = await fetch('/api/events', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
 
-                if (response.ok) {
-                    document.getElementById('uploadForm').reset();
-                    msg.classList.remove('hidden');
-                    setTimeout(() => msg.classList.add('hidden'), 5000);
-                } else {
-                    alert('Error adding memory.');
+                    if (response.ok) {
+                        document.getElementById('uploadForm').reset();
+                        msg.classList.remove('hidden');
+                        setTimeout(() => msg.classList.add('hidden'), 5000);
+                    } else {
+                        alert('Error adding memory.');
+                    }
+                } catch (err) {
+                    alert('Network error: ' + err.message);
+                } finally {
+                    btn.innerText = 'Send to Display!';
+                    btn.disabled = false;
                 }
-            } catch (err) {
-                alert('Network error: ' + err.message);
-            } finally {
+            };
+            
+            if (file) {
+                reader.readAsDataURL(file);
+            } else {
                 btn.innerText = 'Send to Display!';
                 btn.disabled = false;
+                alert('Please select an image file.');
             }
         });
     </script>
