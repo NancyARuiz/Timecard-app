@@ -1,4 +1,9 @@
-use axum::{extract::{State as AxumState, DefaultBodyLimit}, response::Html, routing::get, Json, Router};
+use axum::{
+  extract::{DefaultBodyLimit, State as AxumState},
+  response::Html,
+  routing::get,
+  Json, Router,
+};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
