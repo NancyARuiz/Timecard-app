@@ -153,7 +153,7 @@ pub fn run() {
         let axum_app = Router::new()
           .route("/", get(serve_uploader))
           .route("/api/events", get(api_get_events).post(api_add_event))
-          .layer(DefaultBodyLimit::max(10 * 1024 * 1024))
+          .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
           .with_state(axum_db)
           .layer(CorsLayer::permissive());
 
