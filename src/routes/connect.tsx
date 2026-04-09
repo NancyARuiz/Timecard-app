@@ -1,0 +1,55 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import QRCode from "react-qr-code";
+
+export const Connect: React.FC = () => {
+  return (
+    <div className="min-h-screen bg-slate-50 p-8 pb-20 font-[family-name:var(--font-inter-sans)] flex flex-col items-center justify-center">
+      <header className="mb-12 w-full flex flex-col items-center max-w-3xl">
+        <h1 className="text-4xl md:text-6xl text-center font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-8 tracking-tight">
+          Connect Your Phone
+        </h1>
+
+        <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl shadow-cyan-900/10 border border-slate-200 flex flex-col md:flex-row items-center gap-12 my-6 w-full justify-between">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
+            <h2 className="text-3xl font-bold text-slate-800 mb-6">
+              Add a Memory!
+            </h2>
+            <div className="flex flex-col gap-6 text-xl">
+              <p className="text-slate-600">
+                <span className="font-black text-cyan-600 text-2xl mr-3">
+                  1.
+                </span>
+                Join Wi-Fi:{" "}
+                <strong className="text-slate-800 bg-slate-100 px-4 py-2 rounded-lg ml-1">
+                  makerspacenet
+                </strong>
+              </p>
+              <p className="text-slate-600">
+                <span className="font-black text-cyan-600 text-2xl mr-3">
+                  2.
+                </span>
+                Open Camera & scan QR code!
+              </p>
+            </div>
+          </div>
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex-shrink-0">
+            <QRCode value="http://192.168.0.103:8080" size={200} />
+          </div>
+        </div>
+
+        <div className="mt-12">
+          <Link
+            to="/"
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-bold text-white transition-all duration-200 bg-cyan-600 rounded-full hover:bg-cyan-500 hover:shadow-lg hover:-translate-y-1 overflow-hidden"
+          >
+            <span className="relative z-10">⬅ Back to Timeline</span>
+          </Link>
+        </div>
+      </header>
+    </div>
+  );
+};
+
+export const Route = createFileRoute("/connect")({
+  component: Connect,
+});

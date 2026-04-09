@@ -1,7 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useState } from "react";
-import QRCode from "react-qr-code";
 import { type TimelineEvent, TimelineItem } from "../components/TimelineItem";
 
 export const Home: React.FC = () => {
@@ -31,32 +30,19 @@ export const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 p-8 pb-20 font-[family-name:var(--font-inter-sans)] flex flex-col items-center">
       <header className="mb-12 w-full flex flex-col items-center">
-        <h1 className="text-4xl md:text-6xl text-center font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-4 tracking-tight">
+        <h1 className="text-5xl md:text-7xl text-center font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-6 tracking-tight mt-4">
           Historical Timeline
         </h1>
 
-        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-slate-200 flex flex-col md:flex-row items-center gap-8 my-6 w-full max-w-2xl justify-between">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <h2 className="text-2xl font-bold text-slate-800 mb-4">
-              Add a Memory!
-            </h2>
-            <div className="flex flex-col gap-3">
-              <p className="text-slate-600">
-                <span className="font-bold text-cyan-600 mr-2">1.</span>
-                Join Wi-Fi:{" "}
-                <strong className="text-slate-800 bg-slate-100 px-3 py-1 rounded-md text-lg">
-                  makerspacenet
-                </strong>
-              </p>
-              <p className="text-slate-600">
-                <span className="font-bold text-cyan-600 mr-2">2.</span>
-                Scan the QR code with your Camera
-              </p>
-            </div>
-          </div>
-          <div className="bg-white p-3 rounded-xl shadow-md border border-slate-100 flex-shrink-0">
-            <QRCode value="http://192.168.0.103:8080" size={140} />
-          </div>
+        <div className="my-4">
+          <Link
+            to="/connect"
+            className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-bold text-white transition-all duration-200 bg-cyan-600 rounded-full hover:bg-cyan-500 hover:shadow-lg hover:-translate-y-1 overflow-hidden"
+          >
+            <span className="relative z-10 w-full flex gap-2 items-center">
+              <span className="text-2xl leading-none">+</span> Add a Memory
+            </span>
+          </Link>
         </div>
       </header>
 
