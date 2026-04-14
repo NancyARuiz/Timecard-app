@@ -61,6 +61,12 @@ fn get_events(state: State<AppState>) -> Result<Vec<TimelineEvent>, String> {
   Ok(events)
 }
 
+#[tauri::command]
+fn get_kiosk_url() -> String {
+  let host = hostname::get().unwrap_or_else(|_| std::ffi::OsString::from("timecard"));
+  format!("http://{}.local:8080", host.to_string_lossy())
+}
+
 // AXUM HANDLERS
 async fn api_get_events(
   AxumState(db): AxumState<Arc<Mutex<Connection>>>,
@@ -165,7 +171,7 @@ pub fn run() {
       Ok(())
     })
     .plugin(tauri_plugin_opener::init())
-    .invoke_handler(tauri::generate_handler![get_events])
+    .invoke_handler(tauri::generate_handler![get_events, get_kiosk_url])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

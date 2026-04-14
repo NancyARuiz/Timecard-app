@@ -1,7 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import QRCode from "react-qr-code";
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect, useState } from "react";
 
 export const Connect: React.FC = () => {
+  const [kioskUrl, setKioskUrl] = useState<string>("http://192.168.0.103:8080");
+
+  useEffect(() => {
+    invoke<string>("get_kiosk_url")
+      .then((url) => setKioskUrl(url))
+      .catch(console.error);
+  }, []);
   return (
     <div className="min-h-screen bg-slate-50 p-8 pb-20 font-[family-name:var(--font-inter-sans)] flex flex-col items-center justify-center">
       <header className="mb-12 w-full flex flex-col items-center max-w-3xl">
@@ -32,8 +41,11 @@ export const Connect: React.FC = () => {
               </p>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex-shrink-0">
-            <QRCode value="http://192.168.0.103:8080" size={200} />
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-slate-100 flex-shrink-0 flex flex-col items-center gap-4">
+            <QRCode value={kioskUrl} size={200} />
+            <div className="text-sm font-mono font-medium text-slate-600 bg-slate-100 px-3 py-1 rounded-lg">
+              {kioskUrl}
+            </div>
           </div>
         </div>
 
