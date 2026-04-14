@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import QRCode from "react-qr-code";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import QRCode from "react-qr-code";
 
 export const Connect: React.FC = () => {
   const [kioskUrl, setKioskUrl] = useState<string>("http://192.168.0.103:8080");
