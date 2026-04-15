@@ -1,8 +1,8 @@
 use axum::{
   extract::{DefaultBodyLimit, State as AxumState},
   response::Html,
-  routing::post,
   routing::get,
+  routing::post,
   Json, Router,
 };
 use rusqlite::Connection;
@@ -72,7 +72,7 @@ fn get_current_display_state(state: State<AppState>) -> Result<Option<Person>, S
     let mut stmt = db
       .prepare("SELECT id, name, birth_date, dead_date FROM people WHERE id = ?1")
       .map_err(|e| e.to_string())?;
-    
+
     let person = stmt
       .query_row(rusqlite::params![id], |row| {
         Ok(Person {
@@ -201,8 +201,9 @@ pub fn run() {
       let conn = Connection::open(db_path).expect("Failed to open local database");
 
       // Setup schema
-      conn.execute_batch(
-        "
+      conn
+        .execute_batch(
+          "
         CREATE TABLE IF NOT EXISTS accounts (
           id INTEGER PRIMARY KEY,
           email TEXT NOT NULL,
@@ -224,11 +225,15 @@ pub fn run() {
           description TEXT NOT NULL,
           image_url TEXT NOT NULL
         );
-        "
-      ).expect("Failed to create tables");
+        ",
+        )
+        .expect("Failed to create tables");
 
       // Attempt to lazily add person_id if coming from an older version of the schema
-      let _ = conn.execute("ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1", []);
+      let _ = conn.execute(
+        "ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1",
+        [],
+      );
 
       let shared_db = Arc::new(Mutex::new(conn));
       let active_person = Arc::new(Mutex::new(None));
