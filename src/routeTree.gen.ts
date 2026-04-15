@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TimecardPersonIdRouteImport } from './routes/timecard.$personId'
 
 const ConnectRoute = ConnectRouteImport.update({
   id: '/connect',
@@ -22,31 +23,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TimecardPersonIdRoute = TimecardPersonIdRouteImport.update({
+  id: '/timecard/$personId',
+  path: '/timecard/$personId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/timecard/$personId': typeof TimecardPersonIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/timecard/$personId': typeof TimecardPersonIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/timecard/$personId': typeof TimecardPersonIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/connect'
+  fullPaths: '/' | '/connect' | '/timecard/$personId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/connect'
-  id: '__root__' | '/' | '/connect'
+  to: '/' | '/connect' | '/timecard/$personId'
+  id: '__root__' | '/' | '/connect' | '/timecard/$personId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnectRoute: typeof ConnectRoute
+  TimecardPersonIdRoute: typeof TimecardPersonIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/timecard/$personId': {
+      id: '/timecard/$personId'
+      path: '/timecard/$personId'
+      fullPath: '/timecard/$personId'
+      preLoaderRoute: typeof TimecardPersonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
+  TimecardPersonIdRoute: TimecardPersonIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,7 @@
 use axum::{
   extract::{DefaultBodyLimit, State as AxumState},
   response::Html,
+  routing::post,
   routing::get,
   Json, Router,
 };
@@ -12,43 +13,101 @@ use tower_http::cors::CorsLayer;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TimelineEvent {
-  id: i64,
-  event_date: String,
-  title: String,
-  description: String,
-  image_url: String,
+  pub id: i64,
+  pub person_id: i64,
+  pub event_date: String,
+  pub title: String,
+  pub description: String,
+  pub image_url: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct Person {
+  pub id: i64,
+  pub name: String,
+  pub birth_date: String,
+  pub dead_date: String,
 }
 
 #[derive(Deserialize)]
-pub struct AddEventRequest {
-  event_date: String,
-  title: String,
-  description: String,
-  image_url: String,
+pub struct CreateAccountRequest {
+  pub email: String,
+  pub birthdate: String,
+  pub password: String,
+}
+
+#[derive(Deserialize)]
+pub struct CreatePersonRequest {
+  pub account_id: i64,
+  pub name: String,
+  pub birth_date: String,
+  pub dead_date: String,
+}
+
+#[derive(Deserialize)]
+pub struct AddMemoryRequest {
+  pub person_id: i64,
+  pub event_date: String,
+  pub title: String,
+  pub description: String,
+  pub image_url: String,
 }
 
 struct AppState {
   db: Arc<Mutex<Connection>>,
+  active_person_id: Arc<Mutex<Option<i64>>>,
+}
+
+#[derive(Clone)]
+struct AxumStateData {
+  db: Arc<Mutex<Connection>>,
+  active_person_id: Arc<Mutex<Option<i64>>>,
 }
 
 #[tauri::command]
-fn get_events(state: State<AppState>) -> Result<Vec<TimelineEvent>, String> {
+fn get_current_display_state(state: State<AppState>) -> Result<Option<Person>, String> {
+  let active_id = *state.active_person_id.lock().unwrap();
+  if let Some(id) = active_id {
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    let mut stmt = db
+      .prepare("SELECT id, name, birth_date, dead_date FROM people WHERE id = ?1")
+      .map_err(|e| e.to_string())?;
+    
+    let person = stmt
+      .query_row(rusqlite::params![id], |row| {
+        Ok(Person {
+          id: row.get(0)?,
+          name: row.get(1)?,
+          birth_date: row.get(2)?,
+          dead_date: row.get(3)?,
+        })
+      })
+      .ok();
+    Ok(person)
+  } else {
+    Ok(None)
+  }
+}
+
+#[tauri::command]
+fn get_events(state: State<AppState>, person_id: i64) -> Result<Vec<TimelineEvent>, String> {
   let db = state.db.lock().map_err(|e| e.to_string())?;
 
   let mut stmt = db
     .prepare(
-      "SELECT id, event_date, title, description, image_url FROM events ORDER BY event_date ASC",
+      "SELECT id, person_id, event_date, title, description, image_url FROM events WHERE person_id = ?1 ORDER BY event_date ASC",
     )
     .map_err(|e| e.to_string())?;
 
   let event_iter = stmt
-    .query_map([], |row| {
+    .query_map(rusqlite::params![person_id], |row| {
       Ok(TimelineEvent {
         id: row.get(0)?,
-        event_date: row.get(1)?,
-        title: row.get(2)?,
-        description: row.get(3)?,
-        image_url: row.get(4)?,
+        person_id: row.get(1)?,
+        event_date: row.get(2)?,
+        title: row.get(3)?,
+        description: row.get(4)?,
+        image_url: row.get(5)?,
       })
     })
     .map_err(|e| e.to_string())?;
@@ -68,42 +127,51 @@ fn get_kiosk_url() -> String {
 }
 
 // AXUM HANDLERS
-async fn api_get_events(
-  AxumState(db): AxumState<Arc<Mutex<Connection>>>,
-) -> Result<Json<Vec<TimelineEvent>>, String> {
-  let db = db.lock().map_err(|e| e.to_string())?;
-  let mut stmt = db
-    .prepare(
-      "SELECT id, event_date, title, description, image_url FROM events ORDER BY event_date ASC",
-    )
-    .map_err(|e| e.to_string())?;
-  let event_iter = stmt
-    .query_map([], |row| {
-      Ok(TimelineEvent {
-        id: row.get(0)?,
-        event_date: row.get(1)?,
-        title: row.get(2)?,
-        description: row.get(3)?,
-        image_url: row.get(4)?,
-      })
-    })
-    .map_err(|e| e.to_string())?;
 
-  let mut events = Vec::new();
-  for event in event_iter {
-    events.push(event.map_err(|e| e.to_string())?);
-  }
-  Ok(Json(events))
+async fn api_create_account(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<CreateAccountRequest>,
+) -> Result<Json<i64>, String> {
+  let db = state.db.lock().map_err(|e| e.to_string())?;
+  db.execute(
+    "INSERT INTO accounts (email, birthdate, password) VALUES (?1, ?2, ?3)",
+    rusqlite::params![payload.email, payload.birthdate, payload.password],
+  )
+  .map_err(|e| e.to_string())?;
+
+  Ok(Json(db.last_insert_rowid()))
 }
 
-async fn api_add_event(
-  AxumState(db): AxumState<Arc<Mutex<Connection>>>,
-  Json(payload): Json<AddEventRequest>,
+async fn api_create_person(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<CreatePersonRequest>,
 ) -> Result<Json<i64>, String> {
-  let db = db.lock().map_err(|e| e.to_string())?;
+  let db = state.db.lock().map_err(|e| e.to_string())?;
   db.execute(
-    "INSERT INTO events (event_date, title, description, image_url) VALUES (?1, ?2, ?3, ?4)",
+    "INSERT INTO people (account_id, name, birth_date, dead_date) VALUES (?1, ?2, ?3, ?4)",
     rusqlite::params![
+      payload.account_id,
+      payload.name,
+      payload.birth_date,
+      payload.dead_date
+    ],
+  )
+  .map_err(|e| e.to_string())?;
+
+  let person_id = db.last_insert_rowid();
+  *state.active_person_id.lock().unwrap() = Some(person_id);
+  Ok(Json(person_id))
+}
+
+async fn api_add_memory(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<AddMemoryRequest>,
+) -> Result<Json<i64>, String> {
+  let db = state.db.lock().map_err(|e| e.to_string())?;
+  db.execute(
+    "INSERT INTO events (person_id, event_date, title, description, image_url) VALUES (?1, ?2, ?3, ?4, ?5)",
+    rusqlite::params![
+      payload.person_id,
       payload.event_date,
       payload.title,
       payload.description,
@@ -123,7 +191,6 @@ async fn serve_uploader() -> Html<&'static str> {
 pub fn run() {
   tauri::Builder::default()
     .setup(|app| {
-      // Determine the safe local data directory for this app depending on OS
       let app_data_dir = app
         .path()
         .app_data_dir()
@@ -133,34 +200,59 @@ pub fn run() {
 
       let conn = Connection::open(db_path).expect("Failed to open local database");
 
-      conn
-        .execute(
-          "CREATE TABLE IF NOT EXISTS events (
-                    id INTEGER PRIMARY KEY,
-                    event_date TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    description TEXT NOT NULL,
-                    image_url TEXT NOT NULL
-                )",
-          [],
-        )
-        .expect("Failed to create events table");
+      // Setup schema
+      conn.execute_batch(
+        "
+        CREATE TABLE IF NOT EXISTS accounts (
+          id INTEGER PRIMARY KEY,
+          email TEXT NOT NULL,
+          birthdate TEXT NOT NULL,
+          password TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS people (
+          id INTEGER PRIMARY KEY,
+          account_id INTEGER NOT NULL,
+          name TEXT NOT NULL,
+          birth_date TEXT NOT NULL,
+          dead_date TEXT NOT NULL
+        );
+        CREATE TABLE IF NOT EXISTS events (
+          id INTEGER PRIMARY KEY,
+          person_id INTEGER NOT NULL DEFAULT 1,
+          event_date TEXT NOT NULL,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          image_url TEXT NOT NULL
+        );
+        "
+      ).expect("Failed to create tables");
+
+      // Attempt to lazily add person_id if coming from an older version of the schema
+      let _ = conn.execute("ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1", []);
 
       let shared_db = Arc::new(Mutex::new(conn));
+      let active_person = Arc::new(Mutex::new(None));
 
-      // Manage state for Tauri UI boundaries
+      // Tauri App State
       app.manage(AppState {
         db: shared_db.clone(),
+        active_person_id: active_person.clone(),
       });
 
       // Spawn the Axum server
-      let axum_db = shared_db.clone();
+      let axum_state = AxumStateData {
+        db: shared_db,
+        active_person_id: active_person,
+      };
+
       tauri::async_runtime::spawn(async move {
         let axum_app = Router::new()
           .route("/", get(serve_uploader))
-          .route("/api/events", get(api_get_events).post(api_add_event))
+          .route("/api/accounts", post(api_create_account))
+          .route("/api/people", post(api_create_person))
+          .route("/api/events", post(api_add_memory)) // The new memory endpoint
           .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
-          .with_state(axum_db)
+          .with_state(axum_state)
           .layer(CorsLayer::permissive());
 
         let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
@@ -171,7 +263,11 @@ pub fn run() {
       Ok(())
     })
     .plugin(tauri_plugin_opener::init())
-    .invoke_handler(tauri::generate_handler![get_events, get_kiosk_url])
+    .invoke_handler(tauri::generate_handler![
+      get_events,
+      get_kiosk_url,
+      get_current_display_state
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

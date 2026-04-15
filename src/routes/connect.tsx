@@ -1,27 +1,45 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 
 export const Connect: React.FC = () => {
   const [kioskUrl, setKioskUrl] = useState<string>("http://192.168.0.103:8080");
+  const navigate = useNavigate();
 
   useEffect(() => {
-    invoke<string>("get_kiosk_url")
+    void invoke<string>("get_kiosk_url")
       .then((url) => setKioskUrl(url))
       .catch(console.error);
-  }, []);
+
+    const interval = setInterval(() => {
+      void invoke("get_current_display_state")
+        .then((person: any) => {
+          if (person && person.id) {
+            // @ts-expect-error Ignore type if route strictness complains before gen
+            void navigate({ to: `/timecard/${person.id}` });
+          }
+        })
+        .catch(console.error);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [navigate]);
+
   return (
     <div className="min-h-screen bg-slate-50 p-8 pb-20 font-[family-name:var(--font-inter-sans)] flex flex-col items-center justify-center">
       <header className="mb-12 w-full flex flex-col items-center max-w-3xl">
         <h1 className="text-4xl md:text-6xl text-center font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-8 tracking-tight">
-          Connect Your Phone
+          Timecard
         </h1>
+        <p className="text-xl text-slate-500 mb-4 font-medium text-center">
+          Connect Your Phone to begin.
+        </p>
 
         <div className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl shadow-cyan-900/10 border border-slate-200 flex flex-col md:flex-row items-center gap-12 my-6 w-full justify-between">
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <h2 className="text-3xl font-bold text-slate-800 mb-6">
-              Add a Memory!
+              Create a Profile
             </h2>
             <div className="flex flex-col gap-6 text-xl">
               <p className="text-slate-600">
@@ -47,15 +65,6 @@ export const Connect: React.FC = () => {
               {kioskUrl}
             </div>
           </div>
-        </div>
-
-        <div className="mt-12">
-          <Link
-            to="/"
-            className="group relative inline-flex items-center justify-center px-8 py-4 text-xl font-bold text-white transition-all duration-200 bg-cyan-600 rounded-full hover:bg-cyan-500 hover:shadow-lg hover:-translate-y-1 overflow-hidden"
-          >
-            <span className="relative z-10">⬅ Back to Timeline</span>
-          </Link>
         </div>
       </header>
     </div>
