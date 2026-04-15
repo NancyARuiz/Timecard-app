@@ -39,7 +39,7 @@ export function TimecardDisplay() {
       });
 
     void invoke<TimelineEvent[]>("get_events", {
-      personId: parseInt(personId),
+      personId: parseInt(personId, 10),
     })
       .then((data) => {
         setEvents(data);
@@ -202,6 +202,14 @@ export function TimecardDisplay() {
                   setActiveIndex(i);
                   setIsPlaying(false);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setActiveIndex(i);
+                    setIsPlaying(false);
+                  }
+                }}
+                tabIndex={0}
+                role="button"
               >
                 <img
                   src={event.image_url}
@@ -252,12 +260,14 @@ export function TimecardDisplay() {
       {/* Control Buttons Overlay */}
       <div className="absolute bottom-8 right-12 flex gap-8 z-50 text-xs tracking-widest uppercase font-semibold text-slate-400">
         <button
+          type="button"
           className={`hover:text-slate-700 transition-colors ${isPlaying ? "text-cyan-600" : ""}`}
           onClick={() => setIsPlaying(!isPlaying)}
         >
           {isPlaying ? "Pause" : "Slideshow"}
         </button>
         <button
+          type="button"
           className="hover:text-slate-700 transition-colors"
           onClick={() => {
             /* Placeholder */
@@ -266,6 +276,7 @@ export function TimecardDisplay() {
           Zoom In
         </button>
         <button
+          type="button"
           className="hover:text-slate-700 transition-colors"
           onClick={() => {
             /* Placeholder */

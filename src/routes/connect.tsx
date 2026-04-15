@@ -14,8 +14,9 @@ export const Connect: React.FC = () => {
 
     const interval = setInterval(() => {
       void invoke("get_current_display_state")
-        .then((person: any) => {
-          if (person && person.id) {
+        .then((person: { id?: string | number } | unknown) => {
+          const p = person as { id?: string | number };
+          if (p?.id) {
             // @ts-expect-error Ignore type if route strictness complains before gen
             void navigate({ to: `/timecard/${person.id}` });
           }
