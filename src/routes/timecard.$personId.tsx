@@ -16,6 +16,7 @@ export interface Person {
 
 export function TimecardDisplay() {
   const { personId } = Route.useParams();
+  const [person, setPerson] = useState<Person | null>(null);
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
