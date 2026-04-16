@@ -69,36 +69,57 @@
             </button>
         </form>
 
-        <!-- Step 3: Add Memory -->
+        <!-- Step 3: Select Photos -->
         <form id="step-3" class="step flex-col w-full gap-5">
-            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Upload First Memory</h2>
+            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Upload Memories</h2>
+            <p class="text-slate-500 text-center text-sm mb-2">Select one or multiple photos to add to the timeline.</p>
             
             <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Photo</label>
-                <input type="file" id="mem_file" accept="image/*" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Date of Photo</label>
-                <input type="text" id="mem_date" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="YYYY-MM-DD">
-            </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Title</label>
-                <input type="text" id="mem_title" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="e.g. Tummy Time">
+                <input type="file" id="mem_files" accept="image/*" multiple required class="px-4 py-8 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer w-full text-center">
             </div>
             
-            <button type="submit" id="btn-submit-3" class="mt-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg py-3 rounded-xl font-bold transition-all active:scale-95 text-lg">
-                Complete Setup
+            <button type="submit" id="btn-submit-3" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">
+                Continue to Details
             </button>
         </form>
 
-        <!-- Step 4: Success -->
-        <div id="step-4" class="step flex-col w-full text-center items-center gap-6 py-8">
+        <!-- Step 4: Queue Metadata -->
+        <form id="step-4" class="step flex-col w-full gap-5">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-2xl font-bold text-slate-800">Photo Details</h2>
+                <span id="queue_counter" class="bg-cyan-100 text-cyan-800 text-sm font-bold px-3 py-1 rounded-full">1 of 1</span>
+            </div>
+            
+            <div class="flex justify-center w-full bg-slate-100 rounded-xl p-2 h-40">
+                <img id="queue_preview" class="h-full object-contain rounded-lg shadow-sm" src="" alt="Preview">
+            </div>
+            
+            <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-slate-700">Date of Photo</label>
+                <input type="text" id="queue_date" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="YYYY-MM-DD">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-slate-700">Title</label>
+                <input type="text" id="queue_title" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="e.g. Tummy Time">
+            </div>
+            <div class="flex flex-col gap-1">
+                <label class="text-sm font-semibold text-slate-700">Description (Optional)</label>
+                <textarea id="queue_desc" rows="2" class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="Write a small memory here..."></textarea>
+            </div>
+            
+            <button type="submit" id="btn-submit-4" class="mt-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg py-3 rounded-xl font-bold transition-all active:scale-95 text-lg">
+                Upload & Next
+            </button>
+        </form>
+
+        <!-- Step 5: Success -->
+        <div id="step-5" class="step flex-col w-full text-center items-center gap-6 py-8">
             <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mb-4">✓</div>
             <h2 class="text-3xl font-black text-slate-800">Done!</h2>
             <p class="text-slate-500 text-lg">The Timecard display is updating now.</p>
             
-            <button type="button" onclick="resetToStep3()" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 rounded-xl font-bold transition-all shadow-sm active:scale-95 text-lg border border-slate-200">
-                Upload Another Photo
+            <button type="button" onclick="nextStep(3)" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 rounded-xl font-bold transition-all shadow-sm active:scale-95 text-lg border border-slate-200">
+                Upload More Photos
             </button>
         </div>
     </div>
@@ -106,17 +127,13 @@
     <script>
         let GLOBAL_ACCOUNT_ID = null;
         let GLOBAL_PERSON_ID = null;
+        
+        let QUEUE_FILES = [];
+        let QUEUE_INDEX = 0;
 
         function nextStep(stepNum) {
             document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
             document.getElementById('step-' + stepNum).classList.add('active');
-        }
-
-        function resetToStep3() {
-            document.getElementById('mem_file').value = "";
-            document.getElementById('mem_date').value = "";
-            document.getElementById('mem_title').value = "";
-            nextStep(3);
         }
 
         // STEP 1: CREATE ACCOUNT
@@ -180,13 +197,60 @@
             }
         });
 
-        // STEP 3: ADD MEMORY
-        document.getElementById('step-3').addEventListener('submit', async (e) => {
+        // STEP 3: PREPARE QUEUE
+        document.getElementById('step-3').addEventListener('submit', (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-submit-3');
-            btn.innerText = 'Uploading...'; btn.disabled = true;
+            const files = document.getElementById('mem_files').files;
+            if (files.length === 0) return;
+            
+            QUEUE_FILES = Array.from(files);
+            QUEUE_INDEX = 0;
+            loadQueueItem();
+            nextStep(4);
+        });
 
-            const file = document.getElementById('mem_file').files[0];
+        function loadQueueItem() {
+            if (QUEUE_INDEX >= QUEUE_FILES.length) {
+                // Done with Queue
+                nextStep(5);
+                document.getElementById('mem_files').value = "";
+                return;
+            }
+
+            const file = QUEUE_FILES[QUEUE_INDEX];
+            document.getElementById('queue_counter').innerText = `${QUEUE_INDEX + 1} of ${QUEUE_FILES.length}`;
+            
+            // Clear inputs for the new photo
+            document.getElementById('queue_date').value = "";
+            document.getElementById('queue_title').value = "";
+            document.getElementById('queue_desc').value = "";
+
+            // Change button text intelligently
+            const btn = document.getElementById('btn-submit-4');
+            if (QUEUE_INDEX === QUEUE_FILES.length - 1) {
+                btn.innerText = "Complete Setup";
+                if (QUEUE_FILES.length > 1) btn.innerText = "Finish Uploading";
+            } else {
+                btn.innerText = "Upload & Next Photo";
+            }
+
+            // Show local preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('queue_preview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // STEP 4: UPLOAD SINGLE QUEUE ITEM
+        document.getElementById('step-4').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-4');
+            btn.disabled = true;
+            const originalText = btn.innerText;
+            btn.innerText = "Uploading...";
+
+            const file = QUEUE_FILES[QUEUE_INDEX];
             const reader = new FileReader();
 
             reader.onloadend = async () => {
@@ -200,11 +264,14 @@
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
                     
+                    const descVal = document.getElementById('queue_desc').value;
+                    const titleVal = document.getElementById('queue_title').value;
+
                     const payload = {
                         person_id: GLOBAL_PERSON_ID,
-                        event_date: document.getElementById('mem_date').value,
-                        title: document.getElementById('mem_title').value,
-                        description: document.getElementById('mem_title').value, // Used title for description for simplicity
+                        event_date: document.getElementById('queue_date').value,
+                        title: titleVal,
+                        description: descVal.trim() === "" ? titleVal : descVal,
                         image_url: canvas.toDataURL('image/jpeg', 0.8)
                     };
 
@@ -214,19 +281,21 @@
                             body: JSON.stringify(payload)
                         });
                         if (res.ok) {
-                            nextStep(4);
+                            QUEUE_INDEX++;
+                            loadQueueItem();
                         } else {
                             alert('Upload failed.');
                         }
                     } catch (err) {
                         alert(err.message);
                     } finally {
-                        btn.innerText = 'Complete Setup'; btn.disabled = false;
+                        btn.innerText = originalText; 
+                        btn.disabled = false;
                     }
                 };
                 img.src = reader.result;
             };
-            if (file) reader.readAsDataURL(file);
+            reader.readAsDataURL(file);
         });
     </script>
 </body>
