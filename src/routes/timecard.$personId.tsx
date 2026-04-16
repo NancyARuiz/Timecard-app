@@ -230,20 +230,46 @@ export function TimecardDisplay() {
         </div>
       </div>
 
-      {/* Bottom Floating Timeline Tick Marks */}
-      <div className="absolute bottom-[22%] w-full flex justify-center z-10 opacity-40">
-        <div className="flex gap-12 font-mono text-sm tracking-widest">
-          {events.length > 0 &&
-            Array.from(new Set(events.map((e) => e.event_date.split("-")[0])))
-              .sort()
-              .map((year) => (
-                <span
-                  key={year}
-                  className="relative before:content-[''] before:absolute before:-top-4 before:left-[45%] before:w-[1px] before:h-2 before:bg-slate-800"
-                >
-                  {year}
-                </span>
-              ))}
+      {/* Bottom Continuous Ruler Tick Marks */}
+      <div className="absolute bottom-[15%] w-full flex justify-center z-10 opacity-60">
+        <div className="flex items-center h-16">
+          {(() => {
+            const birthYear = person.birth_date
+              ? parseInt(person.birth_date.substring(0, 4), 10)
+              : 1970;
+            const startDecade = Math.floor(birthYear / 10) * 10;
+            const endDecade =
+              Math.ceil(new Date().getFullYear() / 10) * 10 + 10; // Extra padding decade
+            const decades = [];
+            for (let y = startDecade; y <= endDecade; y += 10) {
+              decades.push(y);
+            }
+
+            return decades.map((decade, i) => (
+              <div key={decade} className="flex">
+                {/* Minor ticks before the decade */}
+                {i > 0 &&
+                  [2, 4, 6, 8].map((minor) => (
+                    <div
+                      key={minor}
+                      className="w-12 h-16 flex flex-col items-center justify-between"
+                    >
+                      <div className="w-[1.5px] h-3 bg-slate-700"></div>
+                      <div className="w-[1.5px] h-3 bg-slate-700"></div>
+                    </div>
+                  ))}
+
+                {/* Major Decade Tick */}
+                <div className="w-20 h-16 flex flex-col items-center justify-between">
+                  <div className="w-[1.5px] h-4 bg-slate-800"></div>
+                  <span className="font-mono text-xl tracking-widest text-slate-800 -my-1">
+                    {decade}
+                  </span>
+                  <div className="w-[1.5px] h-4 bg-slate-800"></div>
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       </div>
 

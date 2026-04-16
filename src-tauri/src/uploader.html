@@ -96,6 +96,10 @@
             <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mb-4">✓</div>
             <h2 class="text-3xl font-black text-slate-800">Done!</h2>
             <p class="text-slate-500 text-lg">The Timecard display is updating now.</p>
+            
+            <button type="button" onclick="resetToStep3()" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 rounded-xl font-bold transition-all shadow-sm active:scale-95 text-lg border border-slate-200">
+                Upload Another Photo
+            </button>
         </div>
     </div>
 
@@ -106,6 +110,13 @@
         function nextStep(stepNum) {
             document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
             document.getElementById('step-' + stepNum).classList.add('active');
+        }
+
+        function resetToStep3() {
+            document.getElementById('mem_file').value = "";
+            document.getElementById('mem_date').value = "";
+            document.getElementById('mem_title').value = "";
+            nextStep(3);
         }
 
         // STEP 1: CREATE ACCOUNT
