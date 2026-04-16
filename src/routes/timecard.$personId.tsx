@@ -38,56 +38,63 @@ export function TimecardDisplay() {
         });
       });
 
-    void invoke<TimelineEvent[]>("get_events", {
-      personId: parseInt(personId, 10),
-    })
-      .then((data) => {
-        setEvents(data);
+    const fetchEvents = () => {
+      void invoke<TimelineEvent[]>("get_events", {
+        personId: parseInt(personId, 10),
       })
-      .catch((err) => {
-        console.warn("Using Mock Events (Backend missing):", err);
-        setEvents([
-          {
-            id: 1,
-            person_id: 1,
-            title: "First Steps",
-            description:
-              "Taking off in the living room for the very first time! She was so brave.",
-            event_date: "2007-06-12",
-            image_url:
-              "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=800&q=80",
-          },
-          {
-            id: 2,
-            person_id: 1,
-            title: "Tummy Time Setup",
-            description:
-              "Testing out the new soft blue blanket in the nursery.",
-            event_date: "2006-11-20",
-            image_url:
-              "https://images.unsplash.com/photo-1544126592-807ca20e29d7?w=800&q=80",
-          },
-          {
-            id: 3,
-            person_id: 1,
-            title: "Smash Cake!",
-            description: "First birthday party chaos at the park.",
-            event_date: "2007-06-08",
-            image_url:
-              "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&q=80",
-          },
-          {
-            id: 4,
-            person_id: 1,
-            title: "Beach Day",
-            description:
-              "Summer trip to the coastal bay. Collected seashells all afternoon.",
-            event_date: "2009-08-14",
-            image_url:
-              "https://images.unsplash.com/photo-1471286174890-9c112225d57b?w=800&q=80",
-          },
-        ]);
-      });
+        .then((data) => {
+          setEvents(data);
+        })
+        .catch((err) => {
+          console.warn("Using Mock Events (Backend missing):", err);
+          setEvents([
+            {
+              id: 1,
+              person_id: 1,
+              title: "First Steps",
+              description:
+                "Taking off in the living room for the very first time! She was so brave.",
+              event_date: "2007-06-12",
+              image_url:
+                "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=800&q=80",
+            },
+            {
+              id: 2,
+              person_id: 1,
+              title: "Tummy Time Setup",
+              description:
+                "Testing out the new soft blue blanket in the nursery.",
+              event_date: "2006-11-20",
+              image_url:
+                "https://images.unsplash.com/photo-1544126592-807ca20e29d7?w=800&q=80",
+            },
+            {
+              id: 3,
+              person_id: 1,
+              title: "Smash Cake!",
+              description: "First birthday party chaos at the park.",
+              event_date: "2007-06-08",
+              image_url:
+                "https://images.unsplash.com/photo-1519689680058-324335c77eba?w=800&q=80",
+            },
+            {
+              id: 4,
+              person_id: 1,
+              title: "Beach Day",
+              description:
+                "Summer trip to the coastal bay. Collected seashells all afternoon.",
+              event_date: "2009-08-14",
+              image_url:
+                "https://images.unsplash.com/photo-1471286174890-9c112225d57b?w=800&q=80",
+            },
+          ]);
+        });
+    };
+
+    fetchEvents();
+    const interval = setInterval(fetchEvents, 5000); // Check for new uploads every 5 seconds
+
+    return () => clearInterval(interval);
   }, [personId]);
 
   // Slideshow Logic
