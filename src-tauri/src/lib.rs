@@ -371,21 +371,21 @@ pub fn run() {
         .expect("Failed to create tables");
 
       // Migration for join_code support
-      let _ = conn.execute(\"ALTER TABLE people ADD COLUMN join_code TEXT\", []);
+      let _ = conn.execute("ALTER TABLE people ADD COLUMN join_code TEXT", []);
       
       let _ = conn.execute(
-        \"CREATE TABLE IF NOT EXISTS people_access (
+        "CREATE TABLE IF NOT EXISTS people_access (
           id INTEGER PRIMARY KEY,
           account_id INTEGER NOT NULL,
           person_id INTEGER NOT NULL,
           role TEXT NOT NULL
-        )\",
+        )",
         [],
       );
 
       // Attempt to lazily add person_id if coming from an older version of the schema
       let _ = conn.execute(
-        \"ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1\",
+        "ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1",
         [],
       );
 
@@ -407,13 +407,13 @@ pub fn run() {
       tauri::async_runtime::spawn(async move {
         let axum_app = Router::new()
           .route("/", get(serve_uploader))
-          .route(\"/api/accounts\", post(api_create_account))
-          .route(\"/api/login\", post(api_login))
-          .route(\"/api/people\", post(api_create_person))
-          .route(\"/api/my-people/:account_id\", get(api_get_my_people))
-          .route(\"/api/join\", post(api_join_timeline))
-          .route(\"/api/switch\", post(api_switch_active))
-          .route(\"/api/events\", post(api_add_memory)) // The new memory endpoint
+          .route("/api/accounts", post(api_create_account))
+          .route("/api/login", post(api_login))
+          .route("/api/people", post(api_create_person))
+          .route("/api/my-people/:account_id", get(api_get_my_people))
+          .route("/api/join", post(api_join_timeline))
+          .route("/api/switch", post(api_switch_active))
+          .route("/api/events", post(api_add_memory)) // The new memory endpoint
           .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
           .with_state(axum_state)
           .layer(CorsLayer::permissive());
