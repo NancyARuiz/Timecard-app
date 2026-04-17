@@ -9,48 +9,78 @@
         .step { display: none; }
         .step.active { display: flex; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .timeline-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .timeline-card:hover { transform: translateY(-4px); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-4 md:p-8 font-sans">
     <div class="max-w-xl mx-auto bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 flex flex-col items-center">
-        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-8 text-center">
+        <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-cyan-600 mb-8 text-center cursor-pointer" onclick="checkAuth()">
             Timecard
         </h1>
 
-        <!-- Step 0: Welcome -->
-        <div id="step-0" class="step active flex-col w-full text-center items-center gap-6">
-            <p class="text-slate-500 text-lg">Welcome to the Timecard portal. Begin by setting up an account to add your memories to the main display.</p>
-            <button onclick="nextStep(1)" class="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg py-4 rounded-xl font-bold transition-all text-xl active:scale-95">
-                Add a Memory
-            </button>
+        <!-- Step 0: Initializing -->
+        <div id="step-0" class="step active flex-col w-full text-center items-center py-12">
+            <div class="w-12 h-12 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-500 font-medium">Getting things ready...</p>
         </div>
 
-        <!-- Step 1: Create Account -->
-        <form id="step-1" class="step flex-col w-full gap-5">
-            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Create Account</h2>
+        <!-- Step 1: Login / Sign Up -->
+        <div id="step-1" class="step flex-col w-full gap-5">
+            <div id="login-container" class="flex flex-col gap-5">
+                <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Welcome Back</h2>
+                <form id="form-login" class="flex flex-col gap-4">
+                    <input type="email" id="login_email" placeholder="Email" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                    <input type="password" id="login_pass" placeholder="Password" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95">Login</button>
+                    <button type="button" onclick="toggleAuth(false)" class="text-slate-500 text-sm hover:underline">Don't have an account? Create one</button>
+                </form>
+            </div>
+            <div id="signup-container" class="hidden flex flex-col gap-5">
+                <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Create Account</h2>
+                <form id="form-signup" class="flex flex-col gap-4">
+                    <input type="email" id="acc_email" placeholder="Email" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                    <input type="text" id="acc_birth" placeholder="Birthdate (YYYY-MM-DD)" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                    <input type="password" id="acc_pass" placeholder="Password" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+                    <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95">Create Account</button>
+                    <button type="button" onclick="toggleAuth(true)" class="text-slate-500 text-sm hover:underline">Already have an account? Login</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Step Dashboard: List Timelines -->
+        <div id="step-dash" class="step flex-col w-full gap-6">
+            <div class="flex justify-between items-end">
+                <h2 class="text-2xl font-bold text-slate-800">Your Timelines</h2>
+                <button onclick="logout()" class="text-xs font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest">Logout</button>
+            </div>
             
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Email</label>
-                <input type="email" id="acc_email" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
+            <div id="timeline-list" class="grid grid-cols-1 gap-3 w-full">
+                <!-- Loaded Dynamically -->
             </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Birthdate</label>
-                <input type="text" id="acc_birth" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="YYYY-MM-DD">
+
+            <div class="grid grid-cols-2 gap-3 mt-4 w-full">
+                <button onclick="nextStep('join')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 rounded-xl font-bold transition-all active:scale-95 border border-slate-200">
+                    Join via Code
+                </button>
+                <button onclick="nextStep(2)" class="bg-cyan-50 hover:bg-cyan-100 text-cyan-700 py-3 rounded-xl font-bold transition-all active:scale-95 border border-cyan-100">
+                    + New Person
+                </button>
             </div>
-            <div class="flex flex-col gap-1">
-                <label class="text-sm font-semibold text-slate-700">Password</label>
-                <input type="password" id="acc_pass" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all">
-            </div>
-            
-            <button type="submit" id="btn-submit-1" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">
-                Continue
-            </button>
+        </div>
+
+        <!-- Step Join: Enter Code -->
+        <form id="step-join" class="step flex-col w-full gap-5">
+            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Join a Timeline</h2>
+            <p class="text-slate-500 text-center text-sm mb-2">Enter the 6-character Join Code provided by the timeline owner.</p>
+            <input type="text" id="join_code_input" maxlength="6" required class="px-4 py-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all text-center text-2xl font-mono uppercase tracking-widest" placeholder="TC-XXXX">
+            <button type="submit" class="bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all active:scale-95">Join Timeline</button>
+            <button type="button" onclick="loadDashboard()" class="text-slate-400 text-sm hover:underline text-center">Back to Dashboard</button>
         </form>
 
-        <!-- Step 2: Person Details -->
+        <!-- Step 2: Create Person -->
         <form id="step-2" class="step flex-col w-full gap-5">
-            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Who is in the photos?</h2>
-            
+            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">New Timeline</h2>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-semibold text-slate-700">Full Name</label>
                 <input type="text" id="per_name" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="John Doe">
@@ -61,26 +91,22 @@
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-semibold text-slate-700">Resting Date (Optional)</label>
-                <input type="text" id="per_death" class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="YYYY-MM-DD or Present">
+                <input type="text" id="per_death" class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="Present">
             </div>
-            
-            <button type="submit" id="btn-submit-2" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">
-                Continue
-            </button>
+            <button type="submit" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">Create Timeline</button>
+            <button type="button" onclick="loadDashboard()" class="text-slate-400 text-sm hover:underline text-center">Cancel</button>
         </form>
 
         <!-- Step 3: Select Photos -->
         <form id="step-3" class="step flex-col w-full gap-5">
-            <h2 class="text-2xl font-bold text-slate-800 text-center mb-2">Upload Memories</h2>
-            <p class="text-slate-500 text-center text-sm mb-2">Select one or multiple photos to add to the timeline.</p>
-            
+            <div class="flex justify-between items-center mb-2">
+                <button type="button" onclick="loadDashboard()" class="text-cyan-600 font-bold hover:underline">← Dashboard</button>
+                <h2 class="text-xl font-bold text-slate-800">Add Memories</h2>
+            </div>
             <div class="flex flex-col gap-1">
                 <input type="file" id="mem_files" accept="image/*" multiple required class="px-4 py-8 bg-slate-50 border-2 border-dashed border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-cyan-50 file:text-cyan-700 hover:file:bg-cyan-100 cursor-pointer w-full text-center">
             </div>
-            
-            <button type="submit" id="btn-submit-3" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">
-                Continue to Details
-            </button>
+            <button type="submit" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 text-lg">Continue to Details</button>
         </form>
 
         <!-- Step 4: Queue Metadata -->
@@ -89,11 +115,9 @@
                 <h2 class="text-2xl font-bold text-slate-800">Photo Details</h2>
                 <span id="queue_counter" class="bg-cyan-100 text-cyan-800 text-sm font-bold px-3 py-1 rounded-full">1 of 1</span>
             </div>
-            
             <div class="flex justify-center w-full bg-slate-100 rounded-xl p-2 h-40">
                 <img id="queue_preview" class="h-full object-contain rounded-lg shadow-sm" src="" alt="Preview">
             </div>
-            
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-semibold text-slate-700">Date of Photo</label>
                 <input type="text" id="queue_date" required class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="YYYY-MM-DD">
@@ -104,199 +128,202 @@
             </div>
             <div class="flex flex-col gap-1">
                 <label class="text-sm font-semibold text-slate-700">Description (Optional)</label>
-                <textarea id="queue_desc" rows="2" class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="Write a small memory here..."></textarea>
+                <textarea id="queue_desc" rows="2" class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all" placeholder="Memory..."></textarea>
             </div>
-            
-            <button type="submit" id="btn-submit-4" class="mt-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg py-3 rounded-xl font-bold transition-all active:scale-95 text-lg">
-                Upload & Next
-            </button>
+            <button type="submit" id="btn-submit-4" class="mt-4 bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg py-3 rounded-xl font-bold active:scale-95">Upload & Next</button>
         </form>
 
         <!-- Step 5: Success -->
         <div id="step-5" class="step flex-col w-full text-center items-center gap-6 py-8">
             <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-4xl mb-4">✓</div>
             <h2 class="text-3xl font-black text-slate-800">Done!</h2>
-            <p class="text-slate-500 text-lg">The Timecard display is updating now.</p>
-            
-            <button type="button" onclick="nextStep(3)" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 rounded-xl font-bold transition-all shadow-sm active:scale-95 text-lg border border-slate-200">
-                Upload More Photos
-            </button>
+            <p class="text-slate-500 text-lg">The display is updating now.</p>
+            <button type="button" onclick="loadDashboard()" class="mt-4 w-full bg-slate-100 text-slate-700 py-4 rounded-xl font-bold border border-slate-200 transition-all active:scale-95">Back to Dashboard</button>
         </div>
     </div>
 
     <script>
-        let GLOBAL_ACCOUNT_ID = null;
+        let GLOBAL_ACCOUNT_ID = localStorage.getItem('TC_ACCOUNT_ID');
         let GLOBAL_PERSON_ID = null;
-        
         let QUEUE_FILES = [];
         let QUEUE_INDEX = 0;
 
-        function nextStep(stepNum) {
+        function nextStep(id) {
             document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-            document.getElementById('step-' + stepNum).classList.add('active');
+            const target = document.getElementById('step-' + id);
+            if (target) target.classList.add('active');
         }
 
-        // STEP 1: CREATE ACCOUNT
-        document.getElementById('step-1').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-submit-1');
-            btn.innerText = 'Creating...'; btn.disabled = true;
+        function toggleAuth(showLogin) {
+            document.getElementById('login-container').style.display = showLogin ? 'flex' : 'none';
+            document.getElementById('signup-container').style.display = showLogin ? 'none' : 'flex';
+        }
 
-            const payload = {
-                email: document.getElementById('acc_email').value,
-                birthdate: document.getElementById('acc_birth').value,
-                password: document.getElementById('acc_pass').value
-            };
+        async function checkAuth() {
+            if (GLOBAL_ACCOUNT_ID) {
+                loadDashboard();
+            } else {
+                nextStep(1);
+            }
+        }
 
+        async function loadDashboard() {
+            nextStep('dash');
+            const list = document.getElementById('timeline-list');
+            list.innerHTML = '<p class="text-slate-400 text-center animate-pulse py-8">Loading your timelines...</p>';
             try {
-                const res = await fetch('/api/accounts', {
+                const res = await fetch(`/api/my-people/${GLOBAL_ACCOUNT_ID}`);
+                const people = await res.json();
+                list.innerHTML = "";
+                if (!people || people.length === 0) {
+                    list.innerHTML = '<p class="text-slate-400 text-center py-8">You haven\'t followed any timelines yet.</p>';
+                } else {
+                    people.forEach(p => {
+                        const card = document.createElement('div');
+                        card.className = "timeline-card bg-slate-50 border border-slate-100 p-4 rounded-2xl flex justify-between items-center cursor-pointer hover:bg-white hover:shadow-lg transition-all w-full";
+                        card.onclick = () => selectPerson(p);
+                        card.innerHTML = `
+                            <div class="text-left">
+                                <h3 class="font-bold text-slate-800 text-lg">${p.name}</h3>
+                                <p class="text-[10px] text-slate-400 font-mono tracking-widest mt-1">SHARE CODE: ${p.join_code}</p>
+                            </div>
+                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-cyan-600 shadow-sm">→</div>
+                        `;
+                        list.appendChild(card);
+                    });
+                }
+            } catch (err) { alert("Failed to load dashboard: " + err); }
+        }
+
+        async function selectPerson(person) {
+            GLOBAL_PERSON_ID = person.id;
+            await fetch('/api/switch', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ person_id: person.id })
+            });
+            nextStep(3);
+        }
+
+        function logout() {
+            localStorage.removeItem('TC_ACCOUNT_ID');
+            GLOBAL_ACCOUNT_ID = null;
+            nextStep(1);
+        }
+
+        document.getElementById('form-login').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch('/api/login', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ email: login_email.value, password: login_pass.value })
                 });
                 if (res.ok) {
                     GLOBAL_ACCOUNT_ID = await res.json();
-                    nextStep(2);
-                } else {
-                    alert('Failed to create account.');
-                }
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.innerText = 'Continue'; btn.disabled = false;
-            }
-        });
+                    localStorage.setItem('TC_ACCOUNT_ID', GLOBAL_ACCOUNT_ID);
+                    loadDashboard();
+                } else { alert("Login failed. Check your credentials."); }
+            } catch (err) { alert("Server error."); }
+        };
 
-        // STEP 2: CREATE PERSON
-        document.getElementById('step-2').addEventListener('submit', async (e) => {
+        document.getElementById('form-signup').onsubmit = async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-submit-2');
-            btn.innerText = 'Saving...'; btn.disabled = true;
+            try {
+                const res = await fetch('/api/accounts', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: acc_email.value, birthdate: acc_birth.value, password: acc_pass.value })
+                });
+                if (res.ok) {
+                    GLOBAL_ACCOUNT_ID = await res.json();
+                    localStorage.setItem('TC_ACCOUNT_ID', GLOBAL_ACCOUNT_ID);
+                    loadDashboard();
+                } else { alert("Failed to create account."); }
+            } catch (err) { alert("Server error."); }
+        };
 
-            const payload = {
-                account_id: GLOBAL_ACCOUNT_ID,
-                name: document.getElementById('per_name').value,
-                birth_date: document.getElementById('per_birth').value,
-                dead_date: document.getElementById('per_death').value || "Present"
-            };
+        document.getElementById('step-join').onsubmit = async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch('/api/join', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ account_id: GLOBAL_ACCOUNT_ID, join_code: join_code_input.value })
+                });
+                if (res.ok) { loadDashboard(); } 
+                else { alert("Could not join timeline. Check the code."); }
+            } catch (err) { alert("Server error."); }
+        };
 
+        document.getElementById('step-2').onsubmit = async (e) => {
+            e.preventDefault();
             try {
                 const res = await fetch('/api/people', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        account_id: GLOBAL_ACCOUNT_ID,
+                        name: per_name.value,
+                        birth_date: per_birth.value,
+                        dead_date: per_death.value || "Present"
+                    })
                 });
-                if (res.ok) {
-                    GLOBAL_PERSON_ID = await res.json();
-                    nextStep(3);
-                } else {
-                    alert('Failed to create person.');
-                }
-            } catch (err) {
-                alert(err.message);
-            } finally {
-                btn.innerText = 'Continue'; btn.disabled = false;
-            }
-        });
+                if (res.ok) { loadDashboard(); }
+            } catch (err) { alert("Server error."); }
+        };
 
-        // STEP 3: PREPARE QUEUE
-        document.getElementById('step-3').addEventListener('submit', (e) => {
+        document.getElementById('step-3').onsubmit = (e) => {
             e.preventDefault();
-            const files = document.getElementById('mem_files').files;
-            if (files.length === 0) return;
-            
-            QUEUE_FILES = Array.from(files);
+            QUEUE_FILES = Array.from(mem_files.files);
             QUEUE_INDEX = 0;
             loadQueueItem();
             nextStep(4);
-        });
+        };
 
         function loadQueueItem() {
-            if (QUEUE_INDEX >= QUEUE_FILES.length) {
-                // Done with Queue
-                nextStep(5);
-                document.getElementById('mem_files').value = "";
-                return;
-            }
-
+            if (QUEUE_INDEX >= QUEUE_FILES.length) { nextStep(5); return; }
             const file = QUEUE_FILES[QUEUE_INDEX];
-            document.getElementById('queue_counter').innerText = `${QUEUE_INDEX + 1} of ${QUEUE_FILES.length}`;
-            
-            // Clear inputs for the new photo
-            document.getElementById('queue_date').value = "";
-            document.getElementById('queue_title').value = "";
-            document.getElementById('queue_desc').value = "";
-
-            // Change button text intelligently
+            queue_counter.innerText = `${QUEUE_INDEX + 1} of ${QUEUE_FILES.length}`;
+            queue_date.value = ""; queue_title.value = ""; queue_desc.value = "";
             const btn = document.getElementById('btn-submit-4');
-            if (QUEUE_INDEX === QUEUE_FILES.length - 1) {
-                btn.innerText = "Complete Setup";
-                if (QUEUE_FILES.length > 1) btn.innerText = "Finish Uploading";
-            } else {
-                btn.innerText = "Upload & Next Photo";
-            }
-
-            // Show local preview
+            btn.innerText = QUEUE_INDEX === QUEUE_FILES.length - 1 ? "Finish Uploading" : "Upload & Next Photo";
             const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('queue_preview').src = e.target.result;
-            };
+            reader.onload = (e) => { queue_preview.src = e.target.result; };
             reader.readAsDataURL(file);
         }
 
-        // STEP 4: UPLOAD SINGLE QUEUE ITEM
-        document.getElementById('step-4').addEventListener('submit', async (e) => {
+        document.getElementById('step-4').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-4');
-            btn.disabled = true;
-            const originalText = btn.innerText;
-            btn.innerText = "Uploading...";
-
+            btn.disabled = true; const originalText = btn.innerText; btn.innerText = "Processing...";
             const file = QUEUE_FILES[QUEUE_INDEX];
             const reader = new FileReader();
-
             reader.onloadend = async () => {
                 const img = new Image();
                 img.onload = async () => {
                     const canvas = document.createElement('canvas');
-                    let w = img.width, h = img.height;
-                    const MAX = 1920;
-                    if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } } 
-                    else { if (h > MAX) { w *= MAX/h; h = MAX; } }
+                    let w = img.width, h = img.height; const MAX = 1920;
+                    if (w > h) { if (w > MAX) { h *= MAX/w; w = MAX; } } else { if (h > MAX) { w *= MAX/h; h = MAX; } }
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    
-                    const descVal = document.getElementById('queue_desc').value;
-                    const titleVal = document.getElementById('queue_title').value;
-
-                    const payload = {
-                        person_id: GLOBAL_PERSON_ID,
-                        event_date: document.getElementById('queue_date').value,
-                        title: titleVal,
-                        description: descVal.trim() === "" ? titleVal : descVal,
-                        image_url: canvas.toDataURL('image/jpeg', 0.8)
-                    };
-
+                    const descVal = queue_desc.value;
                     try {
                         const res = await fetch('/api/events', {
                             method: 'POST', headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
+                            body: JSON.stringify({
+                                person_id: GLOBAL_PERSON_ID,
+                                event_date: queue_date.value,
+                                title: queue_title.value,
+                                description: descVal.trim() === "" ? queue_title.value : descVal,
+                                image_url: canvas.toDataURL('image/jpeg', 0.8)
+                            })
                         });
-                        if (res.ok) {
-                            QUEUE_INDEX++;
-                            loadQueueItem();
-                        } else {
-                            alert('Upload failed.');
-                        }
-                    } catch (err) {
-                        alert(err.message);
-                    } finally {
-                        btn.innerText = originalText; 
-                        btn.disabled = false;
-                    }
+                        if (res.ok) { QUEUE_INDEX++; loadQueueItem(); }
+                    } catch (err) { alert("Upload failed."); }
+                    btn.innerText = originalText; btn.disabled = false;
                 };
                 img.src = reader.result;
             };
             reader.readAsDataURL(file);
-        });
+        };
+
+        setTimeout(checkAuth, 100);
     </script>
 </body>
 </html>

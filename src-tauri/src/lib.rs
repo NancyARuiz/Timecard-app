@@ -27,6 +27,24 @@ pub struct Person {
   pub name: String,
   pub birth_date: String,
   pub dead_date: String,
+  pub join_code: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct LoginRequest {
+  pub email: String,
+  pub password: String,
+}
+
+#[derive(Deserialize)]
+pub struct JoinRequest {
+  pub account_id: i64,
+  pub join_code: String,
+}
+
+#[derive(Deserialize)]
+pub struct SwitchActiveRequest {
+  pub person_id: i64,
 }
 
 #[derive(Deserialize)]
@@ -80,6 +98,7 @@ fn get_current_display_state(state: State<AppState>) -> Result<Option<Person>, S
           name: row.get(1)?,
           birth_date: row.get(2)?,
           dead_date: row.get(3)?,
+          join_code: row.get(4).ok(),
         })
       })
       .ok();
@@ -139,7 +158,24 @@ async fn api_create_account(
   )
   .map_err(|e| e.to_string())?;
 
-  Ok(Json(db.last_insert_rowid()))
+  let account_id = db.last_insert_rowid();
+  Ok(Json(account_id))
+}
+
+async fn api_login(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<LoginRequest>,
+) -> Result<Json<i64>, String> {
+  let db = state.db.lock().map_err(|e| e.to_string())?;
+  let id: i64 = db
+    .query_row(
+      "SELECT id FROM accounts WHERE email = ?1 AND password = ?2",
+      rusqlite::params![payload.email, payload.password],
+      |row| row.get(0),
+    )
+    .map_err(|_| "Invalid email or password".to_string())?;
+
+  Ok(Json(id))
 }
 
 async fn api_create_person(
@@ -147,20 +183,118 @@ async fn api_create_person(
   Json(payload): Json<CreatePersonRequest>,
 ) -> Result<Json<i64>, String> {
   let db = state.db.lock().map_err(|e| e.to_string())?;
+
+  // Generate a random 6-character Join Code
+  let join_code: String = (0..6)
+    .map(|_| {
+      let idx = rand::random::<usize>() % 36;
+      if idx < 10 {
+        (b'0' + idx as u8) as char
+      } else {
+        (b'A' + (idx - 10) as u8) as char
+      }
+    })
+    .collect();
+
   db.execute(
-    "INSERT INTO people (account_id, name, birth_date, dead_date) VALUES (?1, ?2, ?3, ?4)",
+    "INSERT INTO people (account_id, name, birth_date, dead_date, join_code) VALUES (?1, ?2, ?3, ?4, ?5)",
     rusqlite::params![
       payload.account_id,
       payload.name,
       payload.birth_date,
-      payload.dead_date
+      payload.dead_date,
+      join_code
     ],
   )
   .map_err(|e| e.to_string())?;
 
   let person_id = db.last_insert_rowid();
+
+  // Create initial access for the owner
+  db.execute(
+    "INSERT INTO people_access (account_id, person_id, role) VALUES (?1, ?2, 'owner')",
+    rusqlite::params![payload.account_id, person_id],
+  )
+  .map_err(|e| e.to_string())?;
+
   *state.active_person_id.lock().unwrap() = Some(person_id);
   Ok(Json(person_id))
+}
+
+async fn api_join_timeline(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<JoinRequest>,
+) -> Result<Json<i64>, String> {
+  let db = state.db.lock().map_err(|e| e.to_string())?;
+
+  // Find person by join code
+  let person_id: i64 = db
+    .query_row(
+      "SELECT id FROM people WHERE join_code = ?1",
+      rusqlite::params![payload.join_code.to_uppercase()],
+      |row| row.get(0),
+    )
+    .map_err(|_| "Invalid Join Code".to_string())?;
+
+  // Check if access already exists
+  let count: i64 = db
+    .query_row(
+      "SELECT COUNT(*) FROM people_access WHERE account_id = ?1 AND person_id = ?2",
+      rusqlite::params![payload.account_id, person_id],
+      |row| row.get(0),
+    )
+    .unwrap_or(0);
+
+  if count == 0 {
+    db.execute(
+      "INSERT INTO people_access (account_id, person_id, role) VALUES (?1, ?2, 'contributor')",
+      rusqlite::params![payload.account_id, person_id],
+    )
+    .map_err(|e| e.to_string())?;
+  }
+
+  Ok(Json(person_id))
+}
+
+async fn api_get_my_people(
+  AxumState(state): AxumState<AxumStateData>,
+  axum::extract::Path(account_id): axum::extract::Path<i64>,
+) -> Result<Json<Vec<Person>>, String> {
+  let db = state.db.lock().map_err(|e| e.to_string())?;
+  let mut stmt = db
+    .prepare(
+      "SELECT p.id, p.name, p.birth_date, p.dead_date, p.join_code 
+       FROM people p 
+       JOIN people_access pa ON p.id = pa.person_id 
+       WHERE pa.account_id = ?1",
+    )
+    .map_err(|e| e.to_string())?;
+
+  let person_iter = stmt
+    .query_map(rusqlite::params![account_id], |row| {
+      Ok(Person {
+        id: row.get(0)?,
+        name: row.get(1)?,
+        birth_date: row.get(2)?,
+        dead_date: row.get(3)?,
+        join_code: row.get(4).ok(),
+      })
+    })
+    .map_err(|e| e.to_string())?;
+
+  let mut people = Vec::new();
+  for p in person_iter {
+    people.push(p.map_err(|e| e.to_string())?);
+  }
+  Ok(Json(people))
+}
+
+async fn api_switch_active(
+  AxumState(state): AxumState<AxumStateData>,
+  Json(payload): Json<SwitchActiveRequest>,
+) -> Result<Json<bool>, String> {
+  *state.active_person_id.lock().unwrap() = Some(payload.person_id);
+  Ok(Json(true))
 }
 
 async fn api_add_memory(
@@ -215,7 +349,14 @@ pub fn run() {
           account_id INTEGER NOT NULL,
           name TEXT NOT NULL,
           birth_date TEXT NOT NULL,
-          dead_date TEXT NOT NULL
+          dead_date TEXT NOT NULL,
+          join_code TEXT
+        );
+        CREATE TABLE IF NOT EXISTS people_access (
+          id INTEGER PRIMARY KEY,
+          account_id INTEGER NOT NULL,
+          person_id INTEGER NOT NULL,
+          role TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS events (
           id INTEGER PRIMARY KEY,
@@ -229,9 +370,22 @@ pub fn run() {
         )
         .expect("Failed to create tables");
 
+      // Migration for join_code support
+      let _ = conn.execute(\"ALTER TABLE people ADD COLUMN join_code TEXT\", []);
+      
+      let _ = conn.execute(
+        \"CREATE TABLE IF NOT EXISTS people_access (
+          id INTEGER PRIMARY KEY,
+          account_id INTEGER NOT NULL,
+          person_id INTEGER NOT NULL,
+          role TEXT NOT NULL
+        )\",
+        [],
+      );
+
       // Attempt to lazily add person_id if coming from an older version of the schema
       let _ = conn.execute(
-        "ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1",
+        \"ALTER TABLE events ADD COLUMN person_id INTEGER NOT NULL DEFAULT 1\",
         [],
       );
 
@@ -253,9 +407,13 @@ pub fn run() {
       tauri::async_runtime::spawn(async move {
         let axum_app = Router::new()
           .route("/", get(serve_uploader))
-          .route("/api/accounts", post(api_create_account))
-          .route("/api/people", post(api_create_person))
-          .route("/api/events", post(api_add_memory)) // The new memory endpoint
+          .route(\"/api/accounts\", post(api_create_account))
+          .route(\"/api/login\", post(api_login))
+          .route(\"/api/people\", post(api_create_person))
+          .route(\"/api/my-people/:account_id\", get(api_get_my_people))
+          .route(\"/api/join\", post(api_join_timeline))
+          .route(\"/api/switch\", post(api_switch_active))
+          .route(\"/api/events\", post(api_add_memory)) // The new memory endpoint
           .layer(DefaultBodyLimit::max(50 * 1024 * 1024))
           .with_state(axum_state)
           .layer(CorsLayer::permissive());

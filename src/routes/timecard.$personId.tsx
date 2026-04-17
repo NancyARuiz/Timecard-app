@@ -107,7 +107,7 @@ export function TimecardDisplay() {
     return () => clearInterval(interval);
   }, [isPlaying, events.length]);
 
-  const PIXELS_PER_YEAR = 16; // Much tighter scale factor for watch-bezel timeline density
+  const PIXELS_PER_YEAR = 12; // Adjusted for 10.1-inch display to show more context span
 
   const birthYear = person?.birth_date
     ? parseInt(person.birth_date.substring(0, 4), 10)
@@ -150,7 +150,7 @@ export function TimecardDisplay() {
 
   // Helper for pseudo-random scattered width widths
   const getScatteredSize = (index: number) => {
-    const sizes = ["w-32 h-32", "w-48 h-32", "w-32 h-48", "w-40 h-40"];
+    const sizes = ["w-20 h-20", "w-28 h-20", "w-20 h-28", "w-24 h-24"];
     return sizes[index % sizes.length];
   };
 
@@ -285,11 +285,11 @@ export function TimecardDisplay() {
                 <img
                   src={activeEvent.image_url}
                   alt={activeEvent.title}
-                  className="w-72 h-72 object-cover object-center bg-white p-3 pb-10 shadow-2xl transition-transform duration-700"
+                  className="w-56 h-56 object-cover object-center bg-white p-2.5 pb-8 shadow-2xl transition-transform duration-700"
                   style={{ transform: "rotate(-2deg)" }}
                 />
-                <div className="absolute bottom-4 left-0 w-full text-center text-slate-400 text-xs tracking-widest uppercase font-semibold pointer-events-none">
-                  Click to Expand
+                <div className="absolute bottom-3 left-0 w-full text-center text-slate-400 text-[10px] tracking-widest uppercase font-semibold pointer-events-none">
+                  Expand
                 </div>
               </div>
               <div className="pt-4 max-w-sm">
