@@ -145,6 +145,11 @@ fn get_kiosk_url() -> String {
   format!("http://{}.local:8080", host.to_string_lossy())
 }
 
+#[tauri::command]
+fn close_app() {
+  std::process::exit(0);
+}
+
 // AXUM HANDLERS
 
 async fn api_create_account(
@@ -429,7 +434,8 @@ pub fn run() {
     .invoke_handler(tauri::generate_handler![
       get_events,
       get_kiosk_url,
-      get_current_display_state
+      get_current_display_state,
+      close_app
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

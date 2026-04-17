@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "timecard-app",
+  "productName": "Timecard Display",
   "version": "0.1.0",
   "identifier": "com.tauri.deva",
   "build": {
@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "Timecard",
-        "width": 800,
-        "height": 600
+        "title": "Timecard Display",
+        "width": 1280,
+        "height": 800,
+        "fullscreen": true,
+        "resizable": true
       }
     ],
     "security": {

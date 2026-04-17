@@ -265,6 +265,18 @@ export function TimecardDisplay() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800 font-sans overflow-hidden flex flex-col relative w-full h-full select-none cursor-default">
+      {/* Kiosk Exit Button (Top Left) */}
+      <button
+        type="button"
+        onClick={() => {
+          void invoke("close_app");
+        }}
+        className="absolute top-4 left-4 z-[100] opacity-0 hover:opacity-100 transition-opacity p-2 text-slate-300 hover:text-slate-600 cursor-pointer pointer-events-auto"
+        title="Exit"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+
       {/* Background Grid Pattern (Subtle) */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMCwwLDAsMC4wNSkiLz48L3N2Zz4=')] opacity-[0.15] z-0 pointer-events-none"></div>
 
