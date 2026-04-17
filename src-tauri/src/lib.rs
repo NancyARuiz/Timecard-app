@@ -372,7 +372,7 @@ pub fn run() {
 
       // Migration for join_code support
       let _ = conn.execute("ALTER TABLE people ADD COLUMN join_code TEXT", []);
-      
+
       let _ = conn.execute(
         "CREATE TABLE IF NOT EXISTS people_access (
           id INTEGER PRIMARY KEY,
