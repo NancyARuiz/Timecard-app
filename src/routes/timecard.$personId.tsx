@@ -274,7 +274,22 @@ export function TimecardDisplay() {
         className="absolute top-4 left-4 z-[100] opacity-0 hover:opacity-100 transition-opacity p-2 text-slate-300 hover:text-slate-600 cursor-pointer pointer-events-auto"
         title="Exit"
       >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <svg
+          role="img"
+          aria-label="Exit"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <title>Exit</title>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
       </button>
 
       {/* Background Grid Pattern (Subtle) */}
